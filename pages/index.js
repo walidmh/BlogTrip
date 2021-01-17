@@ -3,7 +3,7 @@ import MoreStories from '../components/more-stories'
 import HeroPost from '../components/hero-post'
 import Intro from '../components/intro'
 import Layout from '../components/layout'
-import { getAllPosts } from '../lib/api'
+import { getAllPostsBlog } from '../lib/api-blog'
 import Head from 'next/head'
 import { CMS_NAME } from '../lib/constants'
 
@@ -21,11 +21,11 @@ export default function Index({ allPosts }) {
           {heroPost && (
             <HeroPost
               title={heroPost.title}
-              coverImage={heroPost.coverImage}
-              date={heroPost.date}
-              author={heroPost.author}
+              coverImage={heroPost.feature_image}
+              date={heroPost.published_at}
+              author={heroPost.primary_author}
               slug={heroPost.slug}
-              excerpt={heroPost.excerpt}
+              excerpt={heroPost.custom_excerpt}
             />
           )}
           {morePosts.length > 0 && <MoreStories posts={morePosts} />}
@@ -36,16 +36,9 @@ export default function Index({ allPosts }) {
 }
 
 export async function getStaticProps() {
-  const allPosts = getAllPosts([
-    'title',
-    'date',
-    'slug',
-    'author',
-    'coverImage',
-    'excerpt',
-  ])
-
-  return {
-    props: { allPosts },
-  }
+    const allPosts = await getAllPostsBlog()
+    return{
+        props: { allPosts },
+        revalidate: 10
+    }
 }

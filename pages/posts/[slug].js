@@ -5,15 +5,26 @@ import PostBody from '../../components/post-body'
 import Header from '../../components/header'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
+import { getPostBySlug, getAllPostsBlog } from '../../lib/api-blog'
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
 import { CMS_NAME } from '../../lib/constants'
-import markdownToHtml from '../../lib/markdownToHtml'
+import React from 'react';
 
 export default function Post({ post, morePosts, preview }) {
+  const [enable,SetEnable] = React.useState(true);
+  function loadComments(){
+    SetEnable(false);
+      (function () {
+        var d = document, s = d.createElement('script')
+        s.src = 'https://ghostcms-backend-blog.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })();
+  }
+
   const router = useRouter()
-  if (!router.isFallback && !post?.slug) {
+  if (!router.isFallback && !post.post[0]?.slug) {
     return <ErrorPage statusCode={404} />
   }
   return (
@@ -27,17 +38,21 @@ export default function Post({ post, morePosts, preview }) {
             <article className="mb-32">
               <Head>
                 <title>
-                  {post.title} | Next.js Blog Example with {CMS_NAME}
+                  {post.post[0].title} | {CMS_NAME}
                 </title>
-                <meta property="og:image" content={post.ogImage.url} />
+                <meta property="og:image" content={post.post[0].url} />
               </Head>
               <PostHeader
-                title={post.title}
-                coverImage={post.coverImage}
-                date={post.date}
-                author={post.author}
+                title={post.post[0].title}
+                coverImage={post.post[0].feature_image}
+                date={post.post[0].published_at}
+                author={post.post[0].primary_author}
               />
-              <PostBody content={post.content} />
+              <PostBody content={post.post[0].html} />
+              {enable && (
+                <p className="cursor-pointer max-w-2xl mx-auto font-bold" onClick={loadComments}>Afficher les commentaires</p>
+              )}
+              <div id="disqus_thread"></div>
             </article>
           </>
         )}
@@ -47,29 +62,17 @@ export default function Post({ post, morePosts, preview }) {
 }
 
 export async function getStaticProps({ params }) {
-  const post = getPostBySlug(params.slug, [
-    'title',
-    'date',
-    'slug',
-    'author',
-    'content',
-    'ogImage',
-    'coverImage',
-  ])
-  const content = await markdownToHtml(post.content || '')
-
+  const post = await getPostBySlug(params.slug)
   return {
     props: {
-      post: {
-        ...post,
-        content,
-      },
-    },
+      post: {post},
+      revalidate: 10
   }
+}
 }
 
 export async function getStaticPaths() {
-  const posts = getAllPosts(['slug'])
+  const posts = await getAllPostsBlog()
 
   return {
     paths: posts.map((post) => {

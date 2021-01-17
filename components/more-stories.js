@@ -11,11 +11,11 @@ export default function MoreStories({ posts }) {
           <PostPreview
             key={post.slug}
             title={post.title}
-            coverImage={post.coverImage}
-            date={post.date}
-            author={post.author}
+            coverImage={post.feature_image}
+            date={post.published_at}
+            author={post.primary_author}
             slug={post.slug}
-            excerpt={post.excerpt}
+            excerpt={post.custom_excerpt}
           />
         ))}
       </div>
